@@ -13,11 +13,11 @@ Usage: Require EavOptionSetupFactory using DI. Only one public method is provide
 
 The array of labels are store IDs to Label mappings. The admin scope store label is required, all frontend store labels are optional.
 
-Usage Example:
+Usage Example
+-------------
 
 ```php
 <?php
-
 
 namespace Example\EavOptionTest\Setup;
 
@@ -55,8 +55,8 @@ class InstallData implements InstallDataInterface
         /** @var EavOptionSetup $optionSetup */
         $optionSetup = $this->eavOptionSetupFactory->create(['setup' => $setup]);
 
+        // Add a new attribute
         $attributeCode = 'test_options';
-        
         $eavSetup->addAttribute(Product::ENTITY, $attributeCode, [
             'label' => 'Test Options',
             'required' => 0,
@@ -65,8 +65,11 @@ class InstallData implements InstallDataInterface
             'backend' => \Magento\Eav\Model\Entity\Attribute\Backend\ArrayBackend::class
         ]);
         
+        // Add some options
         $optionSetup->addAttributeOptionIfNotExists(Product::ENTITY, $attributeCode, [0 => 'Foo']);
         $optionSetup->addAttributeOptionIfNotExists(Product::ENTITY, $attributeCode, [0 => 'Bar']);
+        
+        // This option won't be added because there already is a `Foo` option.
         $optionSetup->addAttributeOptionIfNotExists(Product::ENTITY, $attributeCode, [0 => 'Foo']);
     }
 }
@@ -84,6 +87,10 @@ Contribution
 ------------
 Any contributions are highly appreciated. The best way to contribute code is to open a
 [pull request on GitHub](https://help.github.com/articles/using-pull-requests).
+
+License
+-------
+BSD-3-Clause
 
 Developer
 ---------
