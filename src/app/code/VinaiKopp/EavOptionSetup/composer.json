@@ -1,0 +1,18 @@
+{
+  "name": "vinaikopp/eavoptionsetup",
+  "type": "magento2-module",
+  "require": {
+    "magento/module-eav": ">=0.74.0-beta13"
+  },
+  "license": [
+    "BSD-3-Clause"
+  ],
+  "extra": {
+    "map": [
+      [
+        "*",
+        "VinaiKopp/EavOptionSetup"
+      ]
+    ]
+  }
+}
