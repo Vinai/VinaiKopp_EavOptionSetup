@@ -1,0 +1,34 @@
+{
+  "name": "vinaikopp/eavoptionsetup",
+  "description": "This Magento2 extension contains a class to add EAV attribute options only if the attribute does not already have an option with the same label.",
+  "authors": [
+    {
+      "name": "Vinai Kopp",
+      "email": "contact@vinaikopp.com",
+      "homepage": "http://vinaikopp.com",
+      "role": "Developer"
+    }
+  ],
+  "require": {
+    "php": "~5.6.0",
+    "magento/module-eav": ">=0.74.0-beta14,<2.0"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "~4.1.0"
+  },
+  "license": [
+    "BSD-3-Clause"
+  ],
+  "autoload": {
+    "psr-4": {"VinaiKopp\\EavOptionSetup\\": "src"},
+    "files": ["src/module-registration.php"]
+  },
+  "extra": {
+    "map": [
+      [
+        "*",
+        "VinaiKopp/EavOptionSetup"
+      ]
+    ]
+  }
+}

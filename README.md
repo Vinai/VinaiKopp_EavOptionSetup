@@ -1,7 +1,8 @@
-Magento2 EavOptionSetup  
+EavOptionSetup (Magento2)  
 =======================
 
-This Magento2 extension contains a class to easily add EAV attribute options only if the attribute does not already contain an option with the same admin scope label.
+This Magento2 extension contains a class to easily add EAV attribute options only if the specified attribute does not
+already have an option with the same admin scope label.
 
 Facts
 -----
@@ -9,9 +10,23 @@ Facts
 
 Description
 -----------
-Usage: Require EavOptionSetupFactory using DI. Only one public method is provided: `$optionSetup->addAttributeOptionIfNotExists(Product::ENTITY, $attributeCode, [0 => 'Foo']);`
+The EavOptionSetup class is intended to be used within setup scripts, but could actually also be used in other
+situation, for example PIM system integrations.
 
-The array of labels are store IDs to Label mappings. The admin scope store label is required, all frontend store labels are optional.
+Usage: Require EavOptionSetup using DI. Only two public methods are provided:
+
+```php
+$optionSetup->addAttributeOptionIfNotExists(Product::ENTITY, $attributeCode, 'Default Option Label');
+$optionSetup->addAttributeOptionIfNotExistsWithStoreLabels(
+    Product::ENTITY,
+    $attributeCode,
+    'Default Option Label',
+    [1 => 'Store A Label', 3 => 'Store B Label']
+);
+```
+
+The array of store scope labels is a store ID to Store Label map. The store scope label is optional, that is, not all
+stores are required to have their own labels.
 
 Usage Example
 -------------
@@ -28,23 +43,22 @@ use Magento\Framework\Setup\InstallDataInterface;
 use Magento\Framework\Setup\ModuleContextInterface;
 use Magento\Framework\Setup\ModuleDataSetupInterface;
 use VinaiKopp\EavOptionSetup\Setup\EavOptionSetup;
-use VinaiKopp\EavOptionSetup\Setup\EavOptionSetupFactory;
 
 class InstallData implements InstallDataInterface
 {
     /**
-     * @var EavOptionSetupFactory
+     * @var EavOptionSetup
      */
-    private $eavOptionSetupFactory;
+    private $eavOptionSetup;
     
     /**
      * @var EavSetupFactory
      */
     private $eavSetupFactory;
 
-    public function __construct(EavOptionSetupFactory $eavOptionSetupFactory, EavSetupFactory $eavSetupFactory)
+    public function __construct(EavOptionSetup $eavOptionSetup, EavSetupFactory $eavSetupFactory)
     {
-        $this->eavOptionSetupFactory = $eavOptionSetupFactory;
+        $this->eavOptionSetup = $eavOptionSetup;
         $this->eavSetupFactory = $eavSetupFactory;
     }
     
@@ -52,8 +66,6 @@ class InstallData implements InstallDataInterface
     {
         /** @var EavSetup $eavSetup */
         $eavSetup = $this->eavSetupFactory->create(['setup' => $setup]);
-        /** @var EavOptionSetup $optionSetup */
-        $optionSetup = $this->eavOptionSetupFactory->create(['setup' => $setup]);
 
         // Add a new attribute
         $attributeCode = 'test_options';
@@ -66,22 +78,22 @@ class InstallData implements InstallDataInterface
         ]);
         
         // Add some options
-        $optionSetup->addAttributeOptionIfNotExists(Product::ENTITY, $attributeCode, [0 => 'Foo']);
-        $optionSetup->addAttributeOptionIfNotExists(Product::ENTITY, $attributeCode, [0 => 'Bar']);
+        $this->eavOptionSetup->addAttributeOptionIfNotExists(Product::ENTITY, $attributeCode, 'Foo');
+        $this->eavOptionSetup->addAttributeOptionIfNotExists(Product::ENTITY, $attributeCode, 'Bar');
         
         // This option won't be added because there already is a `Foo` option.
-        $optionSetup->addAttributeOptionIfNotExists(Product::ENTITY, $attributeCode, [0 => 'Foo']);
+        $this->optionSetup->addAttributeOptionIfNotExists(Product::ENTITY, $attributeCode, 'Foo');
     }
 }
 ```
 
 Compatibility
 -------------
-- Magento 2 version 0.74.0-beta13 and maybe younger ones, too.
+- Magento 2 version 0.74.0-beta14 and hopefully newer releases, too.
 
 Support
 -------
-Pease use the github issue tracker.
+Please use the github issue tracker.
 
 Contribution
 ------------
@@ -95,7 +107,7 @@ BSD-3-Clause
 Developer
 ---------
 Vinai Kopp  
-[http://www.netzarbeiter.com](http://www.netzarbeiter.com)  
+[http://vinaikopp.com](http://vinaikopp.com)  
 [@VinaiKopp](https://twitter.com/VinaiKopp)
 
 Copyright
