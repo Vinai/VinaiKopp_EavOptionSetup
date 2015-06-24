@@ -50,7 +50,7 @@ class InstallData implements InstallDataInterface
      * @var EavOptionSetup
      */
     private $eavOptionSetup;
-    
+
     /**
      * @var EavSetupFactory
      */
@@ -61,14 +61,14 @@ class InstallData implements InstallDataInterface
         $this->eavOptionSetup = $eavOptionSetup;
         $this->eavSetupFactory = $eavSetupFactory;
     }
-    
+
     public function install(ModuleDataSetupInterface $setup, ModuleContextInterface $context)
     {
         /** @var EavSetup $eavSetup */
         $eavSetup = $this->eavSetupFactory->create(['setup' => $setup]);
 
-        // Add a new attribute
         $attributeCode = 'test_options';
+
         $eavSetup->addAttribute(Product::ENTITY, $attributeCode, [
             'label' => 'Test Options',
             'required' => 0,
@@ -77,14 +77,18 @@ class InstallData implements InstallDataInterface
             'backend' => \Magento\Eav\Model\Entity\Attribute\Backend\ArrayBackend::class
         ]);
         
-        // Add some options
+        // Add some options to the new attribute
         $this->eavOptionSetup->addAttributeOptionIfNotExists(Product::ENTITY, $attributeCode, 'Foo');
         $this->eavOptionSetup->addAttributeOptionIfNotExists(Product::ENTITY, $attributeCode, 'Bar');
+        $this->eavOptionSetup->addAttributeOptionIfNotExistsWithStoreLabels(Product::ENTITY, $attributeCode, 'Qux', [
+            1 => 'Localized qux'
+        ]);
         
-        // This option won't be added because there already is a `Foo` option.
-        $this->optionSetup->addAttributeOptionIfNotExists(Product::ENTITY, $attributeCode, 'Foo');
+        // This label won't be added again because it already exists on the attribute
+        $this->eavOptionSetup->addAttributeOptionIfNotExists(Product::ENTITY, $attributeCode, 'Foo');
     }
 }
+
 ```
 
 Compatibility
