@@ -1,6 +1,7 @@
 {
   "name": "vinaikopp/eavoptionsetup",
   "description": "This Magento2 extension contains a class to add EAV attribute options only if the attribute does not already have an option with the same label.",
+  "keywords": ["magento2"],
   "authors": [
     {
       "name": "Vinai Kopp",
