@@ -10,6 +10,9 @@ use Magento\Eav\Api\Data\AttributeOptionInterfaceFactory;
 use Magento\Eav\Api\Data\AttributeOptionInterface;
 use Magento\Eav\Api\Data\AttributeOptionLabelInterface;
 use Magento\Eav\Api\Data\AttributeOptionLabelInterfaceFactory;
+use Magento\Framework\App\State as AppState;
+use Magento\Framework\Exception\LocalizedException;
+use Magento\Framework\Phrase;
 use VinaiKopp\EavOptionSetup\Setup\EavOptionSetup;
 
 /**
@@ -41,6 +44,11 @@ class EavOptionSetupTest extends \PHPUnit_Framework_TestCase
      * @var AttributeOptionLabelInterfaceFactory|\PHPUnit_Framework_MockObject_MockObject
      */
     private $mockAttributeOptionLabelFactory;
+
+    /**
+     * @var AppState|\PHPUnit_Framework_MockObject_MockObject
+     */
+    private $mockAppState;
 
     /**
      * @param string $testLabel
@@ -78,14 +86,30 @@ class EavOptionSetupTest extends \PHPUnit_Framework_TestCase
     {
         $this->mockAttributeRepository = $this->getMock(AttributeRepositoryInterface::class);
         $this->mockAttributeOptionManagementService = $this->getMock(AttributeOptionManagementInterface::class);
-        $this->mockAttributeOptionFactory = $this->getMock(AttributeOptionInterfaceFactory::class, ['create']);
-        $this->mockAttributeOptionLabelFactory = $this->getMock(AttributeOptionLabelInterfaceFactory::class, ['create']);
-        
+        $this->mockAttributeOptionFactory = $this->getMock(
+            AttributeOptionInterfaceFactory::class,
+            ['create'],
+            [],
+            '',
+            false
+        );
+
+        $this->mockAttributeOptionLabelFactory = $this->getMock(
+            AttributeOptionLabelInterfaceFactory::class,
+            ['create'],
+            [],
+            '',
+            false
+        );
+
+        $this->mockAppState = $this->getMock(AppState::class, [], [], '', false);
+
         $this->optionSetup = new EavOptionSetup(
             $this->mockAttributeRepository,
             $this->mockAttributeOptionManagementService,
             $this->mockAttributeOptionFactory,
-            $this->mockAttributeOptionLabelFactory
+            $this->mockAttributeOptionLabelFactory,
+            $this->mockAppState
         );
     }
 
@@ -95,7 +119,7 @@ class EavOptionSetupTest extends \PHPUnit_Framework_TestCase
     public function itShouldThrowIfAdminLabelIsSpecifiedAsStoreScopeLabel()
     {
         $this->setExpectedException(\RuntimeException::class);
-        
+
         $this->optionSetup->addAttributeOptionIfNotExistsWithStoreLabels(
             'entity_type',
             'attribute_code',
@@ -137,7 +161,7 @@ class EavOptionSetupTest extends \PHPUnit_Framework_TestCase
      * @test
      * @dataProvider unexpectedReturnValueProvider
      */
-    public function itShouldThrowAnExceptionIfTheRepositoryReturnsAUnexpectedResult($returnValue)
+    public function itShouldThrowAnExceptionIfTheRepositoryReturnsAnUnexpectedResult($returnValue)
     {
         $this->setExpectedException(\RuntimeException::class);
         $this->mockAttributeRepository->method('get')->willReturn($returnValue);
@@ -160,11 +184,11 @@ class EavOptionSetupTest extends \PHPUnit_Framework_TestCase
     /**
      * @test
      */
-    public function itShouldNotAddKnownAttributes()
+    public function itShouldNotAddKnownAttributeOptions()
     {
         $mockAttribute = $this->getMock(AttributeInterface::class);
         $mockAttribute->method('getAttributeId')->willReturn(111);
-        
+
         $this->mockAttributeRepository->method('get')->willReturn($mockAttribute);
 
         $this->mockAttributeOptionManagementService->method('getItems')
@@ -173,19 +197,19 @@ class EavOptionSetupTest extends \PHPUnit_Framework_TestCase
                 $this->createMockOptionLabel('Option 2', 200),
                 $this->createMockOptionLabel('Option 3', 300),
             ]);
-        
+
         $this->mockAttributeOptionManagementService->expects($this->never())->method('add');
-        
+
         $this->optionSetup->addAttributeOptionIfNotExists('entity_code', 'attribute_code', 'Option 2');
     }
 
     /**
      * @test
      */
-    public function itShouldAddKnownAttributes()
+    public function itShouldAddUnknownAttributeOptions()
     {
         $this->setSpecifiedAttributeExistsFixture();
-        
+
         $this->mockAttributeOptionFactory->method('create')->willReturn(
             $this->getMock(AttributeOptionInterface::class)
         );
@@ -198,7 +222,7 @@ class EavOptionSetupTest extends \PHPUnit_Framework_TestCase
             ]);
 
         $this->mockAttributeOptionManagementService->expects($this->once())->method('add');
-        
+
         $this->optionSetup->addAttributeOptionIfNotExists('entity_code', 'attribute_code', 'Option 4');
     }
 
@@ -210,7 +234,7 @@ class EavOptionSetupTest extends \PHPUnit_Framework_TestCase
         $this->setSpecifiedAttributeExistsFixture();
 
         $this->expectNewOptionWithStoreLabelToBeCreated();
-        
+
         $this->mockAttributeOptionLabelFactory->method('create')->willReturn(
             $this->getMock(AttributeOptionLabelInterface::class)
         );
@@ -231,5 +255,57 @@ class EavOptionSetupTest extends \PHPUnit_Framework_TestCase
             'Option 4',
             [$testStoreId => 'Option 4 Store 1 Label']
         );
+    }
+
+    /**
+     * @test
+     */
+    public function itShouldTryToSetTheAdminScopeAsAWorkaroundForIssue1405()
+    {
+        $this->setSpecifiedAttributeExistsFixture();
+
+        $this->mockAttributeOptionFactory->method('create')->willReturn(
+            $this->getMock(AttributeOptionInterface::class)
+        );
+
+        $this->mockAttributeOptionManagementService->method('getItems')
+            ->willReturn([
+                $this->createMockOptionLabel('Option 1', 100),
+                $this->createMockOptionLabel('Option 2', 200),
+                $this->createMockOptionLabel('Option 3', 300),
+            ]);
+
+        $this->mockAppState->expects($this->once())->method('setAreaCode');
+
+        $this->optionSetup->addAttributeOptionIfNotExists('entity_code', 'attribute_code', 'Option 4');
+
+    }
+
+    /**
+     * @test
+     */
+    public function itShouldTryToSetTheAdminScopeAsAWorkaroundForIssue1405EvenIfAnAreaIsAlreadySet()
+    {
+        $this->setSpecifiedAttributeExistsFixture();
+
+        $this->mockAttributeOptionFactory->method('create')->willReturn(
+            $this->getMock(AttributeOptionInterface::class)
+        );
+
+        $this->mockAttributeOptionManagementService->method('getItems')
+            ->willReturn([
+                $this->createMockOptionLabel('Option 1', 100),
+                $this->createMockOptionLabel('Option 2', 200),
+                $this->createMockOptionLabel('Option 3', 300),
+            ]);
+
+        $this->mockAppState->expects($this->once())->method('setAreaCode')->willThrowException(
+            new LocalizedException($this->getMock(Phrase::class, [], ['Test Exception']))
+        );
+
+        $this->mockAttributeOptionManagementService->expects($this->once())->method('add');
+        
+        $this->optionSetup->addAttributeOptionIfNotExists('entity_code', 'attribute_code', 'Option 4');
+
     }
 }

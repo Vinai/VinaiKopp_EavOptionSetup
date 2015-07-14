@@ -9,6 +9,7 @@ use Magento\Eav\Api\Data\AttributeOptionInterfaceFactory as AttributeOptionFacto
 use Magento\Eav\Api\Data\AttributeOptionInterface as AttributeOption;
 use Magento\Eav\Api\Data\AttributeOptionLabelInterfaceFactory as AttributeOptionLabelFactory;
 use Magento\Eav\Api\Data\AttributeOptionLabelInterface as AttributeOptionLabel;
+use Magento\Framework\App\State as AppState;
 
 class EavOptionSetup
 {
@@ -44,16 +45,23 @@ class EavOptionSetup
      */
     private $attributeOptionLabelFactory;
 
+    /**
+     * @var AppState
+     */
+    private $appState;
+
     public function __construct(
         AttributeRepository $attributeRepository,
         AttributeOptionManagementService $attributeOptionManagementService,
         AttributeOptionFactory $attributeOptionFactory,
-        AttributeOptionLabelFactory $attributeOptionLabelFactory
+        AttributeOptionLabelFactory $attributeOptionLabelFactory,
+        AppState $appState
     ) {
         $this->attributeRepository = $attributeRepository;
         $this->attrOptionManagementService = $attributeOptionManagementService;
         $this->attributeOptionFactory = $attributeOptionFactory;
         $this->attributeOptionLabelFactory = $attributeOptionLabelFactory;
+        $this->appState = $appState;
     }
 
     /**
@@ -180,6 +188,7 @@ class EavOptionSetup
      */
     private function addAttributeOption($defaultLabel, array $storeScopeLabels)
     {
+        $this->workaroundIssue1405();
         $this->attrOptionManagementService->add(
             $this->attribute->getEntityTypeId(),
             $this->attribute->getAttributeCode(),
@@ -235,5 +244,17 @@ class EavOptionSetup
         return array_reduce($this->attrOptionList, function ($max, AttributeOption $option) {
             return max($max, $option->getSortOrder());
         }, 0);
+    }
+
+    /**
+     * Reference https://github.com/magento/magento2/issues/1405
+     * Remove this method once the issue is resolved that calling an Api Interface
+     * method from a Module Install triggers Exception that Area Code is not set
+     */
+    private function workaroundIssue1405()
+    {
+        if (!$this->appState->getAreaCode()) {
+            $this->appState->setAreaCode('adminhtml');
+        }
     }
 }
