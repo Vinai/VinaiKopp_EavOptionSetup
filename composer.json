@@ -21,15 +21,7 @@
     "BSD-3-Clause"
   ],
   "autoload": {
-    "psr-4": {"VinaiKopp\\EavOptionSetup\\": "src"},
-    "files": ["src/module-registration.php"]
-  },
-  "extra": {
-    "map": [
-      [
-        "*",
-        "VinaiKopp/EavOptionSetup"
-      ]
-    ]
+    "psr-4": {"VinaiKopp\\EavOptionSetup\\": ""},
+    "files": ["registration.php"]
   }
 }
