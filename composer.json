@@ -8,6 +8,12 @@
       "email": "contact@vinaikopp.com",
       "homepage": "http://vinaikopp.com",
       "role": "Developer"
+    },
+    {
+      "name": "Simone Marcato",
+      "email": "info@hevelop.com",
+      "homepage": "https://hevelop.com",
+      "role": "CTO"
     }
   ],
   "require": {
