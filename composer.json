@@ -8,11 +8,17 @@
       "email": "contact@vinaikopp.com",
       "homepage": "http://vinaikopp.com",
       "role": "Developer"
+    },
+    {
+      "name": "Simone Marcato",
+      "email": "info@hevelop.com",
+      "homepage": "https://hevelop.com",
+      "role": "Contributor"
     }
   ],
   "require": {
-    "php": "~5.6.0",
-    "magento/module-eav": ">=0.74.0-beta14,<2.0"
+    "php": "^5.6.0 || ^7.0.0",
+    "magento/module-eav": "^100.0.0"
   },
   "require-dev": {
     "phpunit/phpunit": "~4.1.0"
@@ -21,15 +27,7 @@
     "BSD-3-Clause"
   ],
   "autoload": {
-    "psr-4": {"VinaiKopp\\EavOptionSetup\\": "src"},
-    "files": ["src/module-registration.php"]
-  },
-  "extra": {
-    "map": [
-      [
-        "*",
-        "VinaiKopp/EavOptionSetup"
-      ]
-    ]
+    "psr-4": {"VinaiKopp\\EavOptionSetup\\": ""},
+    "files": ["registration.php"]
   }
 }
