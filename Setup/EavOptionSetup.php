@@ -257,4 +257,85 @@ class EavOptionSetup
             $this->appState->setAreaCode('adminhtml');
         }
     }
+
+        /**
+     * Retrieve Attribute Set Id By Id or Name
+     *
+     * @param int|string $entityTypeId
+     * @param int|string $setId
+     * @return int
+     * @throws LocalizedException
+     */
+    public function getAttributeSetId($entityTypeId, $setId)
+    {
+        if (!is_numeric($setId)) {
+            $setId = $this->getAttributeSet($entityTypeId, $setId, 'attribute_set_id');
+        }
+        if (!is_numeric($setId)) {
+            throw new LocalizedException(__('Wrong attribute set ID'));
+        }
+
+        return $setId;
+    }
+
+    /**
+     * Retrieve Attribute set data by id or name
+     *
+     * @param int|string $entityTypeId
+     * @param int|string $id
+     * @param string $field
+     * @return mixed
+     */
+    public function getAttributeSet($entityTypeId, $id, $field = '*')
+    {
+        $tableName = $this->resurceConnection->getTableName('eav_attribute_set');
+
+        $whereField = is_numeric($id) ? "attribute_set_id" : "attribute_set_name";
+
+        $sql = "SELECT " . $field . " FROM " . $tableName;
+        $sql .= " WHERE " . $whereField . " = " . "'$id'";
+        $sql .= " AND entity_type_id = " . $this->getEntityTypeId($entityTypeId);
+
+        return $this->resurceConnection->getConnection()->fetchOne($sql);
+
+    }
+
+    /**
+     * Retrieve Entity Type Id By Id or Code
+     *
+     * @param int|string $entityTypeId
+     * @return int
+     * @throws LocalizedException
+     */
+    public function getEntityTypeId($entityTypeId)
+    {
+        if (!is_numeric($entityTypeId)) {
+            $entityTypeId = $this->getEntityType($entityTypeId, 'entity_type_id');
+        }
+        if (!is_numeric($entityTypeId)) {
+            throw new LocalizedException(__('Wrong entity ID'));
+        }
+
+        return $entityTypeId;
+    }
+
+    /**
+     * Retrieve Entity Type Data
+     *
+     * @param int|string $id
+     * @param string $field
+     * @return mixed
+     */
+    public function getEntityType($id, $field = '*')
+    {
+
+        $tableName = $this->resurceConnection->getTableName('eav_entity_type');
+
+        $whereField = is_numeric($id) ? "entity_type_id" : "entity_type_code";
+
+        $sql = "SELECT " . $field . " FROM " . $tableName;
+        $sql .= " WHERE " . $whereField . " = " . "'$id'";
+
+        return $this->resurceConnection->getConnection()->fetchOne($sql);
+    }
 }
