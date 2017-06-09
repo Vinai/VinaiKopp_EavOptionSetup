@@ -10,6 +10,7 @@ use Magento\Eav\Api\Data\AttributeOptionInterface as AttributeOption;
 use Magento\Eav\Api\Data\AttributeOptionLabelInterfaceFactory as AttributeOptionLabelFactory;
 use Magento\Eav\Api\Data\AttributeOptionLabelInterface as AttributeOptionLabel;
 use Magento\Framework\App\State as AppState;
+use Magento\Framework\App\ResourceConnection;
 
 class EavOptionSetup
 {
@@ -50,18 +51,26 @@ class EavOptionSetup
      */
     private $appState;
 
+    /**
+     * @var ResourceConnection
+     */
+    private $resurceConnection;
+
     public function __construct(
         AttributeRepository $attributeRepository,
         AttributeOptionManagementService $attributeOptionManagementService,
         AttributeOptionFactory $attributeOptionFactory,
         AttributeOptionLabelFactory $attributeOptionLabelFactory,
-        AppState $appState
-    ) {
+        AppState $appState,
+        ResourceConnection $resurceConnection
+    )
+    {
         $this->attributeRepository = $attributeRepository;
         $this->attrOptionManagementService = $attributeOptionManagementService;
         $this->attributeOptionFactory = $attributeOptionFactory;
         $this->attributeOptionLabelFactory = $attributeOptionLabelFactory;
         $this->appState = $appState;
+        $this->resurceConnection = $resurceConnection;
     }
 
     /**
@@ -85,7 +94,8 @@ class EavOptionSetup
         $attributeCode,
         $defaultOptionLabel,
         array $storeScopeLabels
-    ) {
+    )
+    {
         $this->validateStoreScopeLabels($storeScopeLabels);
         $this->initClassProperties($entityTypeCode, $attributeCode);
 
@@ -99,8 +109,8 @@ class EavOptionSetup
      */
     private function validateStoreScopeLabels(array $optionLabels)
     {
-        array_map(function($storeId) use ($optionLabels) {
-            if (! is_int($storeId)) {
+        array_map(function ($storeId) use ($optionLabels) {
+            if (!is_int($storeId)) {
                 throw new \RuntimeException(__(
                     'Store view labels have to be mapped to a numeric store ID, found the array key "%1" for label "%2"',
                     $storeId,
@@ -217,7 +227,7 @@ class EavOptionSetup
      */
     private function createStoreScopeOptionLabels(array $optionLabels)
     {
-        return array_map(function($storeId) use ($optionLabels) {
+        return array_map(function ($storeId) use ($optionLabels) {
             return $this->createOptionLabel($storeId, $optionLabels[$storeId]);
         }, array_keys($optionLabels));
     }
@@ -258,7 +268,7 @@ class EavOptionSetup
         }
     }
 
-        /**
+    /**
      * Retrieve Attribute Set Id By Id or Name
      *
      * @param int|string $entityTypeId
