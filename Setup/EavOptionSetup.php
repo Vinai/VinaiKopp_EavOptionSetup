@@ -54,7 +54,7 @@ class EavOptionSetup
     /**
      * @var ResourceConnection
      */
-    private $resurceConnection;
+    private $resourceConnection;
 
     public function __construct(
         AttributeRepository $attributeRepository,
@@ -62,7 +62,7 @@ class EavOptionSetup
         AttributeOptionFactory $attributeOptionFactory,
         AttributeOptionLabelFactory $attributeOptionLabelFactory,
         AppState $appState,
-        ResourceConnection $resurceConnection
+        ResourceConnection $resourceConnection
     )
     {
         $this->attributeRepository = $attributeRepository;
@@ -70,7 +70,7 @@ class EavOptionSetup
         $this->attributeOptionFactory = $attributeOptionFactory;
         $this->attributeOptionLabelFactory = $attributeOptionLabelFactory;
         $this->appState = $appState;
-        $this->resurceConnection = $resurceConnection;
+        $this->resourceConnection = $resourceConnection;
     }
 
     /**
@@ -87,7 +87,7 @@ class EavOptionSetup
      * @param string $entityTypeCode
      * @param string $attributeCode
      * @param string $defaultOptionLabel
-     * @param string[] $storeScopeLabels [Store ID => "Store Label"]
+     * @param string[] $storeScopeLabels [Store ID => 'Store Label']
      */
     public function addAttributeOptionIfNotExistsWithStoreLabels(
         $entityTypeCode,
@@ -289,24 +289,24 @@ class EavOptionSetup
     }
 
     /**
-     * Retrieve Attribute set data by id or name
+     * Retrieve Attribute Set Data by Id or Name
      *
      * @param int|string $entityTypeId
      * @param int|string $id
      * @param string $field
-     * @return mixed
+     * @return int|string|null
      */
     public function getAttributeSet($entityTypeId, $id, $field = '*')
     {
-        $tableName = $this->resurceConnection->getTableName('eav_attribute_set');
+        $tableName = $this->resourceConnection->getTableName('eav_attribute_set');
 
-        $whereField = is_numeric($id) ? "attribute_set_id" : "attribute_set_name";
+        $whereField = is_numeric($id) ? 'attribute_set_id' : 'attribute_set_name';
 
-        $sql = "SELECT " . $field . " FROM " . $tableName;
-        $sql .= " WHERE " . $whereField . " = " . "'$id'";
-        $sql .= " AND entity_type_id = " . $this->getEntityTypeId($entityTypeId);
+        $sql = 'SELECT ' . $field . ' FROM ' . $tableName;
+        $sql .= ' WHERE ' . $whereField . ' = ' . "'$id'";
+        $sql .= ' AND entity_type_id = ' . $this->getEntityTypeId($entityTypeId);
 
-        return $this->resurceConnection->getConnection()->fetchOne($sql);
+        return $this->resourceConnection->getConnection()->fetchOne($sql);
 
     }
 
@@ -334,18 +334,18 @@ class EavOptionSetup
      *
      * @param int|string $id
      * @param string $field
-     * @return mixed
+     * @return int|string|null
      */
     public function getEntityType($id, $field = '*')
     {
 
-        $tableName = $this->resurceConnection->getTableName('eav_entity_type');
+        $tableName = $this->resourceConnection->getTableName('eav_entity_type');
 
-        $whereField = is_numeric($id) ? "entity_type_id" : "entity_type_code";
+        $whereField = is_numeric($id) ? 'entity_type_id' : 'entity_type_code';
 
-        $sql = "SELECT " . $field . " FROM " . $tableName;
-        $sql .= " WHERE " . $whereField . " = " . "'$id'";
+        $sql = 'SELECT ' . $field . ' FROM ' . $tableName;
+        $sql .= ' WHERE ' . $whereField . ' = ' . "'$id'";
 
-        return $this->resurceConnection->getConnection()->fetchOne($sql);
+        return $this->resourceConnection->getConnection()->fetchOne($sql);
     }
 }
