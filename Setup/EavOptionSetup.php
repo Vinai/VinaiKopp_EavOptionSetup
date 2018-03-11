@@ -10,6 +10,7 @@ use Magento\Eav\Api\Data\AttributeOptionInterface as AttributeOption;
 use Magento\Eav\Api\Data\AttributeOptionLabelInterfaceFactory as AttributeOptionLabelFactory;
 use Magento\Eav\Api\Data\AttributeOptionLabelInterface as AttributeOptionLabel;
 use Magento\Framework\App\State as AppState;
+use Magento\Framework\App\ResourceConnection;
 
 class EavOptionSetup
 {
@@ -50,18 +51,26 @@ class EavOptionSetup
      */
     private $appState;
 
+    /**
+     * @var ResourceConnection
+     */
+    private $resourceConnection;
+
     public function __construct(
         AttributeRepository $attributeRepository,
         AttributeOptionManagementService $attributeOptionManagementService,
         AttributeOptionFactory $attributeOptionFactory,
         AttributeOptionLabelFactory $attributeOptionLabelFactory,
-        AppState $appState
-    ) {
+        AppState $appState,
+        ResourceConnection $resourceConnection
+    )
+    {
         $this->attributeRepository = $attributeRepository;
         $this->attrOptionManagementService = $attributeOptionManagementService;
         $this->attributeOptionFactory = $attributeOptionFactory;
         $this->attributeOptionLabelFactory = $attributeOptionLabelFactory;
         $this->appState = $appState;
+        $this->resourceConnection = $resourceConnection;
     }
 
     /**
@@ -78,14 +87,15 @@ class EavOptionSetup
      * @param string $entityTypeCode
      * @param string $attributeCode
      * @param string $defaultOptionLabel
-     * @param string[] $storeScopeLabels [Store ID => "Store Label"]
+     * @param string[] $storeScopeLabels [Store ID => 'Store Label']
      */
     public function addAttributeOptionIfNotExistsWithStoreLabels(
         $entityTypeCode,
         $attributeCode,
         $defaultOptionLabel,
         array $storeScopeLabels
-    ) {
+    )
+    {
         $this->validateStoreScopeLabels($storeScopeLabels);
         $this->initClassProperties($entityTypeCode, $attributeCode);
 
@@ -99,8 +109,8 @@ class EavOptionSetup
      */
     private function validateStoreScopeLabels(array $optionLabels)
     {
-        array_map(function($storeId) use ($optionLabels) {
-            if (! is_int($storeId)) {
+        array_map(function ($storeId) use ($optionLabels) {
+            if (!is_int($storeId)) {
                 throw new \RuntimeException(__(
                     'Store view labels have to be mapped to a numeric store ID, found the array key "%1" for label "%2"',
                     $storeId,
@@ -217,7 +227,7 @@ class EavOptionSetup
      */
     private function createStoreScopeOptionLabels(array $optionLabels)
     {
-        return array_map(function($storeId) use ($optionLabels) {
+        return array_map(function ($storeId) use ($optionLabels) {
             return $this->createOptionLabel($storeId, $optionLabels[$storeId]);
         }, array_keys($optionLabels));
     }
@@ -256,5 +266,86 @@ class EavOptionSetup
         if (!$this->appState->getAreaCode()) {
             $this->appState->setAreaCode('adminhtml');
         }
+    }
+
+    /**
+     * Retrieve Attribute Set Id By Id or Name
+     *
+     * @param int|string $entityTypeId
+     * @param int|string $setId
+     * @return int
+     * @throws LocalizedException
+     */
+    public function getAttributeSetId($entityTypeId, $setId)
+    {
+        if (!is_numeric($setId)) {
+            $setId = $this->getAttributeSet($entityTypeId, $setId, 'attribute_set_id');
+        }
+        if (!is_numeric($setId)) {
+            throw new LocalizedException(__('Wrong attribute set ID'));
+        }
+
+        return $setId;
+    }
+
+    /**
+     * Retrieve Attribute Set Data by Id or Name
+     *
+     * @param int|string $entityTypeId
+     * @param int|string $id
+     * @param string $field
+     * @return int|string|null
+     */
+    public function getAttributeSet($entityTypeId, $id, $field = '*')
+    {
+        $tableName = $this->resourceConnection->getTableName('eav_attribute_set');
+
+        $whereField = is_numeric($id) ? 'attribute_set_id' : 'attribute_set_name';
+
+        $sql = 'SELECT ' . $field . ' FROM ' . $tableName;
+        $sql .= ' WHERE ' . $whereField . ' = ' . "'$id'";
+        $sql .= ' AND entity_type_id = ' . $this->getEntityTypeId($entityTypeId);
+
+        return $this->resourceConnection->getConnection()->fetchOne($sql);
+
+    }
+
+    /**
+     * Retrieve Entity Type Id By Id or Code
+     *
+     * @param int|string $entityTypeId
+     * @return int
+     * @throws LocalizedException
+     */
+    public function getEntityTypeId($entityTypeId)
+    {
+        if (!is_numeric($entityTypeId)) {
+            $entityTypeId = $this->getEntityType($entityTypeId, 'entity_type_id');
+        }
+        if (!is_numeric($entityTypeId)) {
+            throw new LocalizedException(__('Wrong entity ID'));
+        }
+
+        return $entityTypeId;
+    }
+
+    /**
+     * Retrieve Entity Type Data
+     *
+     * @param int|string $id
+     * @param string $field
+     * @return int|string|null
+     */
+    public function getEntityType($id, $field = '*')
+    {
+
+        $tableName = $this->resourceConnection->getTableName('eav_entity_type');
+
+        $whereField = is_numeric($id) ? 'entity_type_id' : 'entity_type_code';
+
+        $sql = 'SELECT ' . $field . ' FROM ' . $tableName;
+        $sql .= ' WHERE ' . $whereField . ' = ' . "'$id'";
+
+        return $this->resourceConnection->getConnection()->fetchOne($sql);
     }
 }
