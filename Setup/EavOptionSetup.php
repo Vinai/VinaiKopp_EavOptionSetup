@@ -233,11 +233,11 @@ class EavOptionSetup
     }
 
     /**
-     * @param string $storeLabel
      * @param int $storeId
+     * @param string $storeLabel
      * @return AttributeOptionLabel
      */
-    private function createOptionLabel($storeLabel, $storeId)
+    private function createOptionLabel($storeId, $storeLabel)
     {
         /** @var AttributeOptionLabel $optionLabel */
         $optionLabel = $this->attributeOptionLabelFactory->create();
